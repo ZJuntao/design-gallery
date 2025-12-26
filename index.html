@@ -1,119 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photo Gallery</title>
-    <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* Use Inter as the default font */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* A light gray background */
-        }
-        /* Style for the modal */
-        #modal-backdrop {
-            transition: opacity 0.3s ease;
-        }
-        #modal-content {
-            transition: transform 0.3s ease, opacity 0.3s ease;
-        }
-        /* Custom scrollbar for better aesthetics */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-        /* Fade-in animation for gallery items */
-        .gallery-item {
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>装修设计图库</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
-<body class="antialiased text-gray-800">
+<body>
 
-    <!-- Main Application Container -->
-    <div id="app" class="container mx-auto p-4 md:p-8">
-        
-        <!-- Header -->
-        <header class="mb-6">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Photo Gallery</h1>
-            <!-- Breadcrumb Navigation -->
-            <nav id="breadcrumbs" class="text-lg mt-2 text-gray-600"></nav>
-        </header>
+<h1 class="title">装修设计图库</h1>
 
-        <!-- Loading Indicator -->
-        <div id="loader" class="text-center py-10 hidden">
-             <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            <p class="mt-2 text-gray-500">Loading...</p>
-        </div>
+<div id="category-list" class="grid"></div>
 
-        <!-- Error Message Display -->
-        <div id="error-message" class="text-center py-10 bg-red-100 text-red-700 rounded-lg hidden"></div>
+<script>
+fetch('./gallery.json')
+  .then(res => res.json())
+  .then(data => {
+    const container = document.getElementById('category-list');
 
-        <!-- Gallery Content Area -->
-        <main id="gallery-content" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            <!-- Gallery items will be injected here by JavaScript -->
-			<div id="gallery"></div>
-        </main>
-    </div>
+    Object.keys(data).forEach(category => {
+      const cover = data[category][0]; // 第一张图做封面
 
-    <!-- Image Modal -->
-    <div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 hidden" onclick="galleryApp.closeModal()">
-        <div id="modal-content" class="bg-white rounded-lg shadow-2xl p-4 max-w-4xl max-h-full flex flex-col transform scale-95 opacity-0" onclick="event.stopPropagation()">
-            <img id="modal-image" src="" alt="Full size view" class="max-w-full max-h-[80vh] object-contain mx-auto">
-            <p id="modal-caption" class="text-center mt-4 text-gray-700 font-medium"></p>
-            <button onclick="galleryApp.closeModal()" class="absolute top-2 right-2 bg-white rounded-full p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
-    </div>
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <img src="${cover}" />
+        <div class="card-title">${category}</div>
+      `;
 
-    <script>
-	fetch('./gallery.json')
-	  .then(res => res.json())
-	  .then(data => {
-		const container = document.getElementById('gallery');
-		Object.keys(data).forEach(category => {
-		  const h2 = document.createElement('h2');
-		  h2.innerText = category;
-		  container.appendChild(h2);
+      card.onclick = () => {
+        location.href = `category.html?name=${encodeURIComponent(category)}`;
+      };
 
-		  data[category].forEach(img => {
-			const image = document.createElement('img');
-			image.src = img;
-			image.style.width = '300px';
-			image.style.margin = '10px';
-			image.onclick = () => {
-			  window.open(img);
-			};
-			container.appendChild(image);
-		  });
-		});
-	  });
-	</script>
+      container.appendChild(card);
+    });
+  });
+</script>
 
 </body>
 </html>
