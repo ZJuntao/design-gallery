@@ -1,0 +1,25 @@
+{
+  "name": "static-photo-gallery",
+  "version": "1.0.0",
+  "description": "<p align=\"center\">\r   <img src=\"screenshots/screenshot1.png\" height=\"200\">\r   <img src=\"screenshots/screenshot2.png\" height=\"200\">\r   <img src=\"screenshots/screenshot3.png\" height=\"200\">\r   <img src=\"screenshots/screenshot4.png\" height=\"200\">\r </p>",
+  "main": "generate.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZJuntao/design-gallery.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ZJuntao/design-gallery/issues"
+  },
+  "homepage": "https://github.com/ZJuntao/design-gallery#readme",
+  "dependencies": {
+    "body-parser": "^2.2.1",
+    "express": "^5.2.1",
+    "multer": "^2.0.2"
+  }
+}

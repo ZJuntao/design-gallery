@@ -2,8 +2,7 @@ body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
   background: #f5f5f5;
-  /* Ensure relative positioning for absolute children if needed, though we will likely use fixed/absolute for the button */
-  position: relative; 
+  position: relative;
 }
 
 .title {
@@ -22,17 +21,19 @@ body {
   padding: 8px 16px;
   background: #fff;
   border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
   display: flex;
   align-items: center;
   gap: 4px;
+  z-index: 10;
+  /* Ensure it stays on top */
 }
 
 .back-btn:hover {
   background: #f0f0f0;
   transform: translateX(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .grid {
@@ -46,14 +47,14 @@ body {
   background: #fff;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   transition: transform .2s, box-shadow .2s;
 }
 
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
 }
 
 .card img {
@@ -66,4 +67,135 @@ body {
   padding: 12px;
   font-size: 18px;
   text-align: center;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    /* Allow 2 columns on mobile */
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .title {
+    font-size: 20px;
+    padding: 15px 0;
+  }
+
+  .back-btn {
+    top: 15px;
+    left: 10px;
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+
+  .card img {
+    height: 120px;
+    /* Slightly shorter images on mobile */
+  }
+
+  .card-title {
+    font-size: 14px;
+    padding: 8px;
+  }
+}
+
+/* Lightbox Modal */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.95);
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  margin: auto;
+  display: block;
+  max-width: 95%;
+  max-height: 95vh;
+  object-fit: contain;
+  animation: zoom 0.3s;
+}
+
+@keyframes zoom {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.close {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  color: #f1f1f1;
+  font-size: 30px;
+  /* smaller font size */
+  font-weight: bold;
+  transition: 0.3s;
+  cursor: pointer;
+  z-index: 1001;
+  background: rgba(0, 0, 0, 0.3);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 40px;
+}
+
+.prev,
+.next {
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  width: auto;
+  padding: 16px;
+  margin-top: -50px;
+  color: white;
+  font-weight: bold;
+  font-size: 30px;
+  transition: 0.3s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  z-index: 1001;
+}
+
+.next {
+  right: 10px;
+}
+
+.prev {
+  left: 10px;
+}
+
+.prev:active,
+.next:active {
+  transform: scale(0.9);
+}
+
+@media (max-width: 600px) {
+
+  .prev,
+  .next {
+    font-size: 24px;
+    padding: 10px;
+  }
+
+  .close {
+    top: 15px;
+    right: 15px;
+  }
 }

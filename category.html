@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>分类详情</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -15,30 +16,101 @@
 
   <div id="gallery" class="grid"></div>
 
+  <div id="image-modal" class="modal" onclick="closeModal()">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <img class="modal-content" id="modal-img" onclick="event.stopPropagation()">
+    <a class="prev" onclick="prevImage(event)">&#10094;</a>
+    <a class="next" onclick="nextImage(event)">&#10095;</a>
+  </div>
+
   <script>
     const params = new URLSearchParams(location.search);
     const name = params.get('name');
+    let currentImages = [];
+    let currentIndex = 0;
 
     document.getElementById('title').innerText = name;
 
     fetch('./gallery.json')
       .then(res => res.json())
       .then(data => {
-        const images = data[name];
+        currentImages = data[name] || [];
         const container = document.getElementById('gallery');
 
-        images.forEach(img => {
+        currentImages.forEach((img, index) => {
           const el = document.createElement('img');
           el.src = img;
           el.style.width = '100%';
           el.style.borderRadius = '12px';
           el.style.cursor = 'pointer';
-          el.onclick = () => {
-            window.open(img);
-          };
+          el.onclick = () => openModal(index);
           container.appendChild(el);
         });
       });
+
+    // Modal Logic
+    function openModal(index) {
+      if (index >= 0 && index < currentImages.length) {
+        currentIndex = index;
+        const modal = document.getElementById('image-modal');
+        modal.style.display = "flex";
+        updateModalImage();
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('image-modal').style.display = "none";
+    }
+
+    function updateModalImage() {
+      const img = document.getElementById('modal-img');
+      img.src = currentImages[currentIndex];
+    }
+
+    function prevImage(e) {
+      if (e) e.stopPropagation();
+      currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
+      updateModalImage();
+    }
+
+    function nextImage(e) {
+      if (e) e.stopPropagation();
+      currentIndex = (currentIndex + 1) % currentImages.length;
+      updateModalImage();
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', function (event) {
+      if (document.getElementById('image-modal').style.display === 'flex') {
+        if (event.key === "ArrowLeft") prevImage();
+        if (event.key === "ArrowRight") nextImage();
+        if (event.key === "Escape") closeModal();
+      }
+    });
+
+    // Touch Swipe navigation
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    const modalContent = document.getElementById('image-modal');
+
+    modalContent.addEventListener('touchstart', e => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, {
+      passive: true
+    });
+
+    modalContent.addEventListener('touchend', e => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    }, {
+      passive: true
+    });
+
+    function handleSwipe() {
+      if (touchEndX < touchStartX - 50) nextImage();
+      if (touchEndX > touchStartX + 50) prevImage();
+    }
   </script>
 
 </body>

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>图库管理后台</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+        .admin-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        #admin-content {
+            display: none;
+        }
+
+        /* Management Section Styles */
+        .manage-section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .manage-card {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .manage-card img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .status {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .new-cat-group {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .section-title {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="index.html" class="back-btn">← 返回图库</a>
+
+    <div class="admin-container">
+        <h2 style="text-align:center;">管理员控制台</h2>
+
+        <div id="login-section">
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="password" placeholder="请输入管理员密码" />
+            </div>
+            <button class="btn" onclick="login()">登录</button>
+        </div>
+
+        <div id="admin-content">
+
+            <!-- Upload Section -->
+            <div>
+                <h3 class="section-title">上传图片</h3>
+                <div class="form-group">
+                    <label>选择分类</label>
+                    <select id="category-select" onchange="checkNewCategory()">
+                        <option value="">-- 请选择 --</option>
+                        <option value="__NEW__">+ 新增分类</option>
+                    </select>
+                    <div id="new-category-input" class="new-cat-group">
+                        <input type="text" id="new-category-name" placeholder="输入新分类名称" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>选择图片</label>
+                    <input type="file" id="image-file" accept="image/*" />
+                </div>
+
+                <button class="btn" onclick="uploadImage()">上传图片</button>
+            </div>
+
+            <!-- Management Section -->
+            <div class="manage-section">
+                <h3 class="section-title">管理与删除</h3>
+
+                <div class="form-group">
+                    <label>管理分类</label>
+                    <select id="manage-category-select" onchange="loadCategoryImages()">
+                        <option value="">-- 请选择要管理的分类 --</option>
+                    </select>
+                </div>
+
+                <div id="manage-area" style="display:none;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span>当前分类操作:</span>
+                        <button class="btn btn-danger" style="width: auto; padding: 8px 15px;"
+                            onclick="deleteCategory()">删除整个分类</button>
+                    </div>
+
+                    <div id="manage-grid" class="image-grid">
+                        <!-- Images will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        let isLoggedIn = false;
+
+        function login() {
+            const password = document.getElementById('password').value;
+
+            fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            })
+                .then(res => {
+                    if (res.ok) {
+                        isLoggedIn = true;
+                        document.getElementById('login-section').style.display = 'none';
+                        document.getElementById('admin-content').style.display = 'block';
+                        loadCategories();
+                    } else {
+                        showStatus('密码错误', 'error');
+                    }
+                })
+                .catch(err => showStatus('登录失败', 'error'));
+        }
+
+        function loadCategories() {
+            fetch('/api/categories')
+                .then(res => res.json())
+                .then(cats => {
+                    const uploadSelect = document.getElementById('category-select');
+                    const manageSelect = document.getElementById('manage-category-select');
+
+                    // Reset
+                    uploadSelect.innerHTML = '<option value="">-- 请选择 --</option><option value="__NEW__">+ 新增分类</option>';
+                    manageSelect.innerHTML = '<option value="">-- 请选择要管理的分类 --</option>';
+
+                    cats.forEach(c => {
+                        // For upload
+                        const opt1 = document.createElement('option');
+                        opt1.value = c;
+                        opt1.innerText = c;
+                        uploadSelect.insertBefore(opt1, uploadSelect.lastElementChild);
+
+                        // For manage
+                        const opt2 = document.createElement('option');
+                        opt2.value = c;
+                        opt2.innerText = c;
+                        manageSelect.appendChild(opt2);
+                    });
+                });
+        }
+
+        function checkNewCategory() {
+            const select = document.getElementById('category-select');
+            const inputDiv = document.getElementById('new-category-input');
+            if (select.value === '__NEW__') {
+                inputDiv.style.display = 'block';
+            } else {
+                inputDiv.style.display = 'none';
+            }
+        }
+
+        function uploadImage() {
+            const select = document.getElementById('category-select');
+            let category = select.value;
+            const fileInput = document.getElementById('image-file');
+            const file = fileInput.files[0];
+
+            if (category === '__NEW__') {
+                category = document.getElementById('new-category-name').value.trim();
+            }
+
+            if (!category || !file || category === '') {
+                showStatus('请填写完整信息', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('category', category);
+            formData.append('image', file);
+
+            showStatus('上传中...', '');
+
+            fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showStatus('上传成功！', 'success');
+                        fileInput.value = '';
+                        if (select.value === '__NEW__') {
+                            loadCategories();
+                            document.getElementById('new-category-name').value = '';
+                            document.getElementById('new-category-input').style.display = 'none';
+                        } else {
+                            // If we are currently managing this category, refresh the grid
+                            const manageSelect = document.getElementById('manage-category-select');
+                            if (manageSelect.value === category) {
+                                loadCategoryImages();
+                            }
+                        }
+                    } else {
+                        showStatus('上传失败: ' + data.message, 'error');
+                    }
+                })
+                .catch(err => {
+                    showStatus('上传出错', 'error');
+                    console.error(err);
+                });
+        }
+
+        // Management Functions
+        function loadCategoryImages() {
+            const category = document.getElementById('manage-category-select').value;
+            const manageArea = document.getElementById('manage-area');
+            const grid = document.getElementById('manage-grid');
+
+            if (!category) {
+                manageArea.style.display = 'none';
+                return;
+            }
+
+            manageArea.style.display = 'block';
+            grid.innerHTML = '加载中...';
+
+            fetch(`/api/images?category=${encodeURIComponent(category)}`)
+                .then(res => res.json())
+                .then(images => {
+                    grid.innerHTML = '';
+                    if (images.length === 0) {
+                        grid.innerHTML = '<p>该分类下暂无图片</p>';
+                        return;
+                    }
+
+                    images.forEach(img => {
+                        const card = document.createElement('div');
+                        card.className = 'manage-card';
+                        card.innerHTML = `
+                    <img src="${img}" />
+                    <button class="delete-btn" onclick="deleteImage('${category}', '${img}')" title="删除图片">×</button>
+                `;
+                        grid.appendChild(card);
+                    });
+                });
+        }
+
+        function deleteImage(category, imagePath) {
+            if (!confirm('确定要删除这张图片吗？')) return;
+
+            fetch('/api/image', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category, imagePath })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        loadCategoryImages(); // Refresh
+                        showStatus('图片已删除', 'success');
+                    } else {
+                        showStatus('删除失败', 'error');
+                    }
+                });
+        }
+
+        function deleteCategory() {
+            const category = document.getElementById('manage-category-select').value;
+            if (!category) return;
+
+            if (!confirm(`警告：确定要删除【${category}】整个分类吗？\n该操作将删除分类下所有图片，且不可恢复！`)) return;
+
+            fetch('/api/category', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showStatus('分类已删除', 'success');
+                        loadCategories(); // Reload dropdowns
+                        document.getElementById('manage-area').style.display = 'none';
+                    } else {
+                        showStatus('删除失败', 'error');
+                    }
+                });
+        }
+
+        function showStatus(msg, type) {
+            const el = document.getElementById('status');
+            el.innerText = msg;
+            el.className = 'status ' + type;
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,40 +1,50 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>装修设计图库</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
+
 <body>
 
-<h1 class="title">装修设计图库</h1>
+  <h1 class="title">装修设计图库</h1>
 
-<div id="category-list" class="grid"></div>
+  <div id="category-list" class="grid"></div>
 
-<script>
-fetch('./gallery.json')
-  .then(res => res.json())
-  .then(data => {
-    const container = document.getElementById('category-list');
+  <script>
+    fetch('./gallery.json')
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById('category-list');
 
-    Object.keys(data).forEach(category => {
-      const cover = data[category][0]; // 第一张图做封面
+        Object.keys(data).forEach(category => {
+          const cover = data[category][0]; // 第一张图做封面
 
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = `
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.innerHTML = `
         <img src="${cover}" />
         <div class="card-title">${category}</div>
       `;
 
-      card.onclick = () => {
-        location.href = `category.html?name=${encodeURIComponent(category)}`;
-      };
+          card.onclick = () => {
+            location.href = `category.html?name=${encodeURIComponent(category)}`;
+          };
 
-      container.appendChild(card);
-    });
-  });
-</script>
+          container.appendChild(card);
+        });
+      });
+  </script>
+
+  <footer style="text-align: center; margin-top: 50px; padding: 20px; color: #999; font-size: 12px;">
+    &copy; 2024 装修设计图库
+    <br><br>
+    <a href="admin.html" style="color: #eee; text-decoration: none;">Admin</a>
+  </footer>
 
 </body>
+
 </html>
