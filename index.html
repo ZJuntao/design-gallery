@@ -5,14 +5,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>装修设计图库</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
   <link rel="stylesheet" href="css/style.css" />
 </head>
 
 <body>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">xxx设计装修公司</h1>
+    </header>
 
-  <h1 class="title">装修设计图库</h1>
+    <div id="category-list" class="grid"></div>
 
-  <div id="category-list" class="grid"></div>
+    <footer style="text-align: center; margin-top: 60px; padding: 20px; color: #b0bfd6; font-size: 13px;">
+      &copy; 2024 DESIGN GALLERY
+      <br><br>
+      <a href="admin.html" style="color: #dbe4ef; text-decoration: none; font-size: 12px;">Admin Entry</a>
+    </footer>
+  </div>
 
   <script>
     fetch('./gallery.json')
@@ -38,12 +49,6 @@
         });
       });
   </script>
-
-  <footer style="text-align: center; margin-top: 50px; padding: 20px; color: #999; font-size: 12px;">
-    &copy; 2024 装修设计图库
-    <br><br>
-    <a href="admin.html" style="color: #eee; text-decoration: none;">Admin</a>
-  </footer>
 
 </body>
 
