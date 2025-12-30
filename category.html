@@ -1,41 +1,46 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8" />
   <title>分类详情</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
+
 <body>
 
-<h1 id="title" class="title"></h1>
+  <a href="index.html" class="back-btn">← 返回</a>
 
-<div id="gallery" class="grid"></div>
+  <h1 id="title" class="title"></h1>
 
-<script>
-const params = new URLSearchParams(location.search);
-const name = params.get('name');
+  <div id="gallery" class="grid"></div>
 
-document.getElementById('title').innerText = name;
+  <script>
+    const params = new URLSearchParams(location.search);
+    const name = params.get('name');
 
-fetch('./gallery.json')
-  .then(res => res.json())
-  .then(data => {
-    const images = data[name];
-    const container = document.getElementById('gallery');
+    document.getElementById('title').innerText = name;
 
-    images.forEach(img => {
-      const el = document.createElement('img');
-      el.src = img;
-      el.style.width = '100%';
-      el.style.borderRadius = '12px';
-      el.style.cursor = 'pointer';
-      el.onclick = () => {
-        window.open(img);
-      };
-      container.appendChild(el);
-    });
-  });
-</script>
+    fetch('./gallery.json')
+      .then(res => res.json())
+      .then(data => {
+        const images = data[name];
+        const container = document.getElementById('gallery');
+
+        images.forEach(img => {
+          const el = document.createElement('img');
+          el.src = img;
+          el.style.width = '100%';
+          el.style.borderRadius = '12px';
+          el.style.cursor = 'pointer';
+          el.onclick = () => {
+            window.open(img);
+          };
+          container.appendChild(el);
+        });
+      });
+  </script>
 
 </body>
+
 </html>
