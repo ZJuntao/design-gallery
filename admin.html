@@ -155,6 +155,21 @@
 
         <div id="admin-content">
 
+            <!-- Mode Switch Section -->
+            <div style="margin-bottom: 30px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 16px;">全局展示模式</h3>
+                <div style="display: flex; gap: 20px;">
+                    <label style="font-weight: normal; cursor: pointer;">
+                        <input type="radio" name="displayMode" value="1" onclick="switchMode(1)"> 
+                        <strong>模式 1:</strong> 纯图片展示 (点击查看大图)
+                    </label>
+                    <label style="font-weight: normal; cursor: pointer;">
+                        <input type="radio" name="displayMode" value="2" onclick="switchMode(2)"> 
+                        <strong>模式 2:</strong> 3D 案例链接 (点击跳转外链)
+                    </label>
+                </div>
+            </div>
+
             <!-- Upload Section -->
             <div>
                 <h3 class="section-title">上传图片</h3>
@@ -169,12 +184,17 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>选择图片</label>
+                <div class="form-group" id="upload-group">
+                    <label id="upload-label">选择图片</label>
                     <input type="file" id="image-file" accept="image/*" />
                 </div>
 
-                <button class="btn" onclick="uploadImage()">上传图片</button>
+                <div class="form-group" id="link-group" style="display:none;">
+                    <label>3D 案例链接 (自动抓取缩略图)</label>
+                    <input type="text" id="link-url" placeholder="https://..." />
+                </div>
+
+                <button class="btn" onclick="uploadImage()">上传</button>
             </div>
 
             <!-- Management Section -->
@@ -209,6 +229,66 @@
 
     <script>
         let isLoggedIn = false;
+        let currentMode = 1;
+
+        // Fetch config on load
+        fetch('/api/config')
+            .then(res => res.json())
+            .then(config => {
+                currentMode = config.displayMode || 1;
+                updateUIForMode(currentMode);
+            })
+            .catch(e => console.error(e));
+
+        function updateUIForMode(mode) {
+            currentMode = mode;
+            // Update Radio Buttons
+            const radios = document.getElementsByName('displayMode');
+            for (const r of radios) {
+                if (parseInt(r.value) === mode) r.checked = true;
+            }
+
+            // Update Upload UI
+            if (mode === 2) {
+                document.getElementById('link-group').style.display = 'block';
+                document.getElementById('upload-group').style.display = 'none';
+                document.getElementById('upload-label').innerText = '上传缩略图';
+            } else {
+                document.getElementById('link-group').style.display = 'none';
+                document.getElementById('upload-group').style.display = 'block';
+                document.getElementById('upload-label').innerText = '选择图片';
+            }
+        }
+
+        function switchMode(mode) {
+            if (mode === currentMode) return;
+            
+            if(!confirm(`确定要切换到“模式 ${mode}”吗？这会影响全站的展示方式。`)) {
+                // Revert radio button if cancelled
+                updateUIForMode(currentMode);
+                return;
+            }
+
+            fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ displayMode: mode })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showStatus(`已切换至模式 ${mode}`, 'success');
+                    updateUIForMode(mode);
+                } else {
+                    showStatus('切换失败', 'error');
+                    updateUIForMode(currentMode);
+                }
+            })
+            .catch(() => {
+                showStatus('网络错误', 'error');
+                updateUIForMode(currentMode);
+            });
+        }
 
         function login() {
             const password = document.getElementById('password').value;
@@ -273,19 +353,31 @@
             let category = select.value;
             const fileInput = document.getElementById('image-file');
             const file = fileInput.files[0];
+            const linkInput = document.getElementById('link-url');
+            const link = linkInput.value.trim();
 
             if (category === '__NEW__') {
                 category = document.getElementById('new-category-name').value.trim();
             }
 
-            if (!category || !file || category === '') {
+            if (!category || (currentMode === 1 && !file) || category === '') {
                 showStatus('请填写完整信息', 'error');
                 return;
             }
 
+            if (currentMode === 2 && !link) {
+                 showStatus('模式2需要填写3D案例链接', 'error');
+                 return;
+            }
+
             const formData = new FormData();
             formData.append('category', category);
-            formData.append('image', file);
+            if (file) {
+                formData.append('image', file);
+            }
+            if (currentMode === 2) {
+                formData.append('link', link);
+            }
 
             showStatus('上传中...', '');
 
@@ -342,12 +434,23 @@
                         return;
                     }
 
-                    images.forEach(img => {
+                    images.forEach(item => {
+                        const isObject = typeof item === 'object';
+                        const imgSrc = isObject ? item.thumbnail : item;
+                        const itemValue = isObject ? item.thumbnail : item; // Use thumbnail path as ID for deletion
+
                         const card = document.createElement('div');
                         card.className = 'manage-card';
+                        
+                        let extraInfo = '';
+                        if (isObject && item.type === 'link') {
+                            extraInfo = `<div style="padding:5px; font-size:12px; color:#666; word-break:break-all;">🔗 ${item.url}</div>`;
+                        }
+
                         card.innerHTML = `
-                    <img src="${img}" />
-                    <button class="delete-btn" onclick="deleteImage('${category}', '${img}')" title="删除图片">×</button>
+                    <img src="${imgSrc}" />
+                    ${extraInfo}
+                    <button class="delete-btn" onclick="deleteImage('${category}', '${itemValue}')" title="删除">×</button>
                 `;
                         grid.appendChild(card);
                     });

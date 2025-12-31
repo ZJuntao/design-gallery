@@ -20,6 +20,7 @@
   "dependencies": {
     "body-parser": "^2.2.1",
     "express": "^5.2.1",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "open-graph-scraper": "^6.11.0"
   }
 }

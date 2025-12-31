@@ -11,7 +11,7 @@
   <meta property="og:title" content="xxx设计装修公司 - 作品案例集" />
   <meta property="og:description" content="点击查看我们的精选装修设计案例，寻找您的家居灵感。" />
   <meta property="og:image"
-    content="https://publisher-permission-sage-thanksgiving.trycloudflare.com/screenshots/screenshot1.png" />
+    content="https://management-wiley-jewish-scott.trycloudflare.com//screenshots/screenshot1.png" />
   <meta property="og:type" content="website" />
 
   <link rel="icon"
@@ -38,23 +38,37 @@
   </div>
 
   <script>
-    fetch('./gallery.json')
-      .then(res => res.json())
-      .then(data => {
+    Promise.all([
+      fetch('./gallery.json').then(res => res.json()),
+      fetch('/api/config').then(res => res.json()).catch(() => ({ displayMode: 1 }))
+    ])
+      .then(([data, config]) => {
         const container = document.getElementById('category-list');
+        const mode = config.displayMode || 1;
 
         Object.keys(data).forEach(category => {
-          const cover = data[category][0]; // 第一张图做封面
+          const coverItem = data[category][0]; 
+          const cover = typeof coverItem === 'string' ? coverItem : coverItem.thumbnail; // Handle both string and object
 
           const card = document.createElement('div');
           card.className = 'card';
+          
+          let titleHtml = category;
+          if (mode === 2) {
+              titleHtml += ' <span style="font-size: 12px; color: #666;">(3D展示)</span>';
+          }
+
           card.innerHTML = `
         <img src="${cover}" />
-        <div class="card-title">${category}</div>
+        <div class="card-title">${titleHtml}</div>
       `;
 
           card.onclick = () => {
-            location.href = `category.html?name=${encodeURIComponent(category)}`;
+             // In index, we always go to category page. 
+             // Mode 2 specific behavior happens inside category page or here if we want direct jump.
+             // Requirement says: "将图片换成3d案例的链接" -> usually implies clicking the item opens the link.
+             // But on index page, we are clicking a category. So we should still go to category page.
+             location.href = `category.html?name=${encodeURIComponent(category)}`;
           };
 
           container.appendChild(card);

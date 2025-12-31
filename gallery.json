@@ -1,11 +1,28 @@
 {
   "现代简约": [
-    "gallery/现代简约/01.jpeg",
-    "gallery/现代简约/02.jpeg",
-    "gallery/现代简约/03.jpeg"
+    {
+      "type": "link",
+      "thumbnail": "gallery/现代简约/og_1767148479881.jpg",
+      "url": "https://vr.justeasy.cn/view/i17fm670676r0231-1767076176.html",
+      "title": "悦舍装饰乐乐家"
+    }
   ],
   "中式": [
     "gallery/中式/01.jpeg",
-    "gallery/中式/02.jpeg"
+    "gallery/中式/02.jpeg",
+    {
+      "type": "link",
+      "thumbnail": "gallery/中式/og_1767147986995.jpg",
+      "url": "https://vr.justeasy.cn/view/i17fm670676r0231-1767076176.html",
+      "title": "悦舍装饰乐乐家"
+    }
+  ],
+  "意式": [
+    {
+      "type": "link",
+      "thumbnail": "gallery/意式/og_1767149132828.jpg",
+      "url": "https://vr.justeasy.cn/view/41759x728405k6o9-1758243685.html",
+      "title": "意式"
+    }
   ]
 }

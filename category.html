@@ -43,19 +43,35 @@
         currentImages = data[name] || [];
         const container = document.getElementById('gallery');
 
-        currentImages.forEach((img, index) => {
+        currentImages.forEach((item, index) => {
+          const isObject = typeof item === 'object';
+          const imgSrc = isObject ? item.thumbnail : item;
+          
           const el = document.createElement('img');
-          el.src = img;
+          el.src = imgSrc;
           el.style.width = '100%';
           el.style.borderRadius = '12px';
           el.style.cursor = 'pointer';
-          el.onclick = () => openModal(index);
+          
+          if (isObject && item.type === 'link') {
+               // Mode 2: Open link
+               el.onclick = () => window.open(item.url, '_blank');
+               // Add an icon or indicator?
+               el.title = "点击查看3D案例";
+           } else {
+              // Mode 1: Open Modal
+              el.onclick = () => openModal(index);
+          }
+          
           container.appendChild(el);
         });
       });
 
     // Modal Logic
     function openModal(index) {
+      const item = currentImages[index];
+      if (typeof item === 'object') return; // Should not happen if logic above is correct
+
       if (index >= 0 && index < currentImages.length) {
         currentIndex = index;
         const modal = document.getElementById('image-modal');

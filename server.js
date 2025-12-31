@@ -3,10 +3,14 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const bodyParser = require('body-parser');
+const ogs = require('open-graph-scraper');
+const https = require('https');
+const http = require('http');
 
 const app = express();
 const PORT = 3000;
 const GALLERY_JSON_PATH = path.join(__dirname, 'gallery.json');
+const CONFIG_PATH = path.join(__dirname, 'config.json');
 
 // Middleware
 app.use(bodyParser.json());
@@ -48,12 +52,68 @@ app.post('/api/login', (req, res) => {
 });
 
 // API: Upload Image
-app.post('/api/upload', upload.single('image'), (req, res) => {
-    const { category } = req.body;
-    const file = req.file;
+app.post('/api/upload', upload.single('image'), async (req, res) => {
+    const { category, link } = req.body;
+    let file = req.file;
 
-    if (!file || !category) {
-        return res.status(400).json({ success: false, message: 'Missing file or category' });
+    if (!category) {
+        return res.status(400).json({ success: false, message: 'Missing category' });
+    }
+    
+    // If no file but we have a link, try to fetch OG image
+    if (!file && link) {
+        try {
+            const { result } = await ogs({ url: link });
+            let imageUrl = null;
+            if (result.ogImage && result.ogImage.length > 0) {
+                imageUrl = result.ogImage[0].url;
+            }
+            
+            if (imageUrl) {
+                 // Determine filename and path
+                 const ext = path.extname(imageUrl.split('?')[0]) || '.jpg';
+                 const timestamp = Date.now();
+                 const filename = `og_${timestamp}${ext}`;
+                 const categoryPath = path.join(__dirname, 'gallery', category);
+                 
+                 // Ensure dir exists
+                 if (!fs.existsSync(categoryPath)) {
+                     fs.mkdirSync(categoryPath, { recursive: true });
+                 }
+                 
+                 const filePath = path.join(categoryPath, filename);
+                 const fileStream = fs.createWriteStream(filePath);
+                 
+                 await new Promise((resolve, reject) => {
+                     const protocol = imageUrl.startsWith('https') ? https : http;
+                     protocol.get(imageUrl, (response) => {
+                         response.pipe(fileStream);
+                         fileStream.on('finish', () => {
+                             fileStream.close();
+                             resolve();
+                         });
+                     }).on('error', (err) => {
+                         fs.unlink(filePath, () => {}); // delete partial file
+                         reject(err);
+                     });
+                 });
+                 
+                 // Mock file object for downstream logic
+                 file = {
+                     filename: filename,
+                     originalname: result.ogTitle || '3D Case'
+                 };
+            } else {
+                 return res.status(400).json({ success: false, message: 'Could not find OG image in link' });
+            }
+        } catch (err) {
+            console.error(err);
+            return res.status(500).json({ success: false, message: 'Failed to fetch OG data: ' + err.message });
+        }
+    }
+
+    if (!file) {
+        return res.status(400).json({ success: false, message: 'Missing file or link with OG image' });
     }
 
     // Update gallery.json
@@ -79,10 +139,28 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
         // Construct the relative path to be stored in JSON
         // Note: We use forward slashes for web compatibility
         const relativePath = `gallery/${category}/${file.filename}`;
+        
+        // Construct entry based on presence of link
+        let entry;
+        if (link) {
+            entry = {
+                type: 'link',
+                thumbnail: relativePath,
+                url: link,
+                title: file.originalname // optional
+            };
+        } else {
+            entry = relativePath;
+        }
 
-        // Avoid duplicates
-        if (!gallery[category].includes(relativePath)) {
-            gallery[category].push(relativePath);
+        // Avoid duplicates (Check logic differs for object vs string)
+        const exists = gallery[category].some(item => {
+            const itemPath = typeof item === 'string' ? item : item.thumbnail;
+            return itemPath === relativePath;
+        });
+
+        if (!exists) {
+            gallery[category].push(entry);
         }
 
         fs.writeFile(GALLERY_JSON_PATH, JSON.stringify(gallery, null, 2), (err) => {
@@ -135,7 +213,10 @@ app.delete('/api/image', (req, res) => {
         let gallery = JSON.parse(data);
         if (gallery[category]) {
             // Remove from JSON
-            gallery[category] = gallery[category].filter(img => img !== imagePath);
+            gallery[category] = gallery[category].filter(item => {
+                const itemPath = typeof item === 'string' ? item : item.thumbnail;
+                return itemPath !== imagePath;
+            });
 
             // Remove file
             const fullPath = path.join(__dirname, imagePath);
@@ -182,6 +263,38 @@ app.delete('/api/category', (req, res) => {
 });
 
 
+
+// API: Get Config
+app.get('/api/config', (req, res) => {
+    fs.readFile(CONFIG_PATH, 'utf8', (err, data) => {
+        if (err) {
+            // Default config if file missing
+            return res.json({ displayMode: 1 });
+        }
+        try {
+            res.json(JSON.parse(data));
+        } catch (e) {
+            res.json({ displayMode: 1 });
+        }
+    });
+});
+
+// API: Update Config
+app.post('/api/config', (req, res) => {
+    const { displayMode } = req.body;
+    if (![1, 2].includes(displayMode)) {
+        return res.status(400).json({ success: false, message: 'Invalid mode' });
+    }
+
+    const config = { displayMode };
+    fs.writeFile(CONFIG_PATH, JSON.stringify(config, null, 2), (err) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ success: false, message: 'Error saving config' });
+        }
+        res.json({ success: true });
+    });
+});
 
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
