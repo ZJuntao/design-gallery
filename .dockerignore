@@ -1,0 +1,7 @@
+node_modules
+logs
+.git
+.gitignore
+Dockerfile
+ecosystem.config.js
+*.md
