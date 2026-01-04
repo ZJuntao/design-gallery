@@ -8,7 +8,7 @@ sudo dnf install git curl -y
 
 ### 3. 安装 Node.js 18 (LTS 版本)
 ### 使用 NodeSource 源，这是最推荐的安装方式
-curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
 sudo dnf install -y nodejs
 
 ### 4. 验证安装
