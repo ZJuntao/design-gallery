@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 app.use(express.static(__dirname)); // Serve static files from root
 
 // simple admin password (in a real app, use environment variables and hashing)
-const ADMIN_PASSWORD = 'admin';
+const ADMIN_PASSWORD = 'wanglei741';
 
 // Configure Multer for file uploads
 const storage = multer.diskStorage({
