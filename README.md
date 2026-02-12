@@ -37,3 +37,21 @@ sudo firewall-cmd --zone=public --add-port=3000/tcp --permanent
 
 ### 11. 重载防火墙配置使其生效
 sudo firewall-cmd --reload
+
+### 12. 安装nginx
+##  若使用nginx则不需要执行10、11
+sudo dnf install -y nginx
+
+### 13. nginx配置
+cp -ravf webconfig/nginx/* /etc/nginx 
+
+### 14. 重启nginx
+systemctl restart nginx
+systemctl enable nginx
+
+### 15. 开发443、80端口
+sudo firewall-cmd --permanent --add-service=https
+sudo firewall-cmd --permanent --add-service=http
+
+### 16. 重载防火墙配置使其生效
+sudo firewall-cmd --reload
