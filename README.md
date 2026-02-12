@@ -39,7 +39,7 @@ sudo firewall-cmd --zone=public --add-port=3000/tcp --permanent
 sudo firewall-cmd --reload
 
 ### 12. 安装nginx
-##  若使用nginx则不需要执行10、11
+>若使用nginx则不需要执行10、11
 sudo dnf install -y nginx
 
 ### 13. nginx配置
